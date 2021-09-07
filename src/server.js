@@ -15,9 +15,12 @@ const handleListen = () => console.log("Listening on http://localhost:3000");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const handleConnection = (socket) => {
-  console.log(socket);
-};
+wss.on("connection", (socket) => {
+  console.log("Connected to the Browser ✔");
+  socket.on("close", () => console.log("Disconnected from the Browser ❌"));
 
-wss.on("connection", handleConnection);
+  socket.send("hello!");
+  socket.on("message", (message) => console.log(message.toString("utf-8")));
+});
+
 server.listen(3000, handleListen);
