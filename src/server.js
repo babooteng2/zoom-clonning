@@ -19,11 +19,22 @@ const wss = new WebSocket.Server({ server });
 const sockets = [];
 wss.on("connection", (socket) => {
   sockets.push(socket);
+  socket["nickname"] = "anonymouse";
   console.log("Connected to the Browser ✔");
   socket.on("close", () => console.log("Disconnected from the Browser ❌"));
   socket.on("message", (message) => {
     //console.log(message.toString("utf-8"));
-    sockets.forEach((aSocket) => aSocket.send(message));
+    const msg = JSON.parse(message);
+    switch (msg.type) {
+      case "message":
+        sockets.forEach((aSocket) =>
+          aSocket.send(`${socket.nickname}: ${msg.payload}`)
+        );
+        break;
+      case "nickname":
+        socket["nickname"] = msg.payload;
+        break;
+    }
   });
 });
 
