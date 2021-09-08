@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 //kill -9 $(lsof -t -i tcp:3000) - 사용포트 서버 죽이기
@@ -15,7 +15,13 @@ app.get("/*", (_, res) => res.redirect("/"));
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wsServer = SocketIO(server);
+
+wsServer.on("connection", (socket) => {
+  console.log(socket);
+});
+
+/* const wss = new WebSocket.Server({ server });
 const sockets = [];
 wss.on("connection", (socket) => {
   sockets.push(socket);
@@ -36,6 +42,6 @@ wss.on("connection", (socket) => {
         break;
     }
   });
-});
+}); */
 
 server.listen(3000, handleListen);
