@@ -20,21 +20,36 @@ const wsServer = SocketIO(server);
 wsServer.on("connection", (socket) => {
   //console.log(socket.id)
   // kind of middle ware
+  socket["nickname"] = "Anonymouse";
+
   socket.onAny((event) => {
     console.log(`Socket Event : ${event}`);
   });
+
   socket.on("enter_room", (roomName, done) => {
     //console.log(socket.rooms);
     socket.join(roomName);
-    socket.to(roomName).emit("welcome");
+    socket.to(roomName).emit("welcome", socket.nickname);
     done();
   });
-  ``;
+
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("bye", socket.nickname)
+    );
   });
+
   socket.on("new_message", (msg, roomName, done) => {
-    socket.to(roomName).emit("new_message", msg);
+    socket.to(roomName).emit("new_message", `${socket.nickname} : ${msg}`);
+    done();
+  });
+
+  socket.on("nick_name", (nickname, done) => {
+    if (nickname == "") {
+      socket["nickname"] = "Anonymouse";
+    } else {
+      socket["nickname"] = nickname;
+    }
     done();
   });
 });

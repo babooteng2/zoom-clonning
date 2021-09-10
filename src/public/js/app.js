@@ -1,54 +1,87 @@
 const socket = io();
 
-const welcome = document.getElementById("welcome");
-const form = welcome.querySelector("form");
-const room = document.getElementById("room");
-room.hidden = true;
+const room_elm = document.getElementById("room");
+const nickName_form = document.getElementById("nickName");
+const roomName_form = document.getElementById("roomName");
+const msg_form = document.getElementById("msg");
 
 let roomName;
 
-function handleMessageSubmit(e) {
-  e.preventDefault();
-  const input = room.querySelector("input");
-  const value = input.value;
-  socket.emit("new_message", value, roomName, () => {
-    addMessage(`You: ${value}`);
+const toggleElmArr = [nickName_form, roomName_form, msg_form];
+
+function togglElmShow(elm) {
+  toggleElmArr.forEach((target) => {
+    if (target === elm) {
+      target.hidden = false;
+    } else {
+      target.hidden = true;
+    }
   });
-  input.value = "";
 }
 
-function addMessage(message) {
-  const ul = room.querySelector("ul");
+function showNickNameForm() {
+  togglElmShow(nickName_form);
+}
+
+function addMessage(msg) {
+  const ul = room_elm.querySelector("ul");
   const li = document.createElement("li");
-  li.innerHTML = message;
+  li.innerHTML = msg;
   ul.append(li);
 }
 
-function showRoom() {
-  welcome.hidden = true;
-  room.hidden = false;
-  const h3 = room.querySelector("h3");
-  h3.innerHTML = `Room ${roomName}`;
-  const form = room.querySelector("form");
-  form.addEventListener("submit", handleMessageSubmit);
+function showMsgForm() {
+  togglElmShow(msg_form);
 }
 
-function handleRoomSubmit(e) {
+msg_form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const input = form.querySelector("input");
-  socket.emit("enter_room", input.value, showRoom);
-  roomName = input.value;
+  const input = msg_form.querySelector("input");
+  const { value } = input;
+  socket.emit("new_message", value, roomName, () => {
+    addMessage(`You : ${value}`);
+  });
   input.value = "";
-}
-
-form.addEventListener("submit", handleRoomSubmit);
-
-socket.on("welcome", () => {
-  addMessage("someone joined!");
 });
 
-socket.on("bye", () => {
-  addMessage("someone left!");
+const changeNickBtn = msg_form.querySelector(".changeNickBtn");
+changeNickBtn.addEventListener("click", () => {
+  showNickNameForm();
+});
+
+function showRoomNameForm() {
+  togglElmShow(roomName_form);
+}
+
+roomName_form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = roomName_form.querySelector("input");
+  const { value } = input;
+  const h3 = room_elm.querySelector("h3");
+  h3.innerHTML = `Room ${value}`;
+  roomName = value;
+  socket.emit("enter_room", value, showMsgForm);
+});
+
+nickName_form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = nickName_form.querySelector("input");
+  const { value } = input;
+  if (roomName == undefined) {
+    socket.emit("nick_name", value, showRoomNameForm);
+  } else {
+    socket.emit("nick_name", value, showMsgForm);
+  }
+});
+
+showNickNameForm();
+
+socket.on("welcome", (nickname) => {
+  addMessage(`${nickname} joined!`);
+});
+
+socket.on("bye", (nickname) => {
+  addMessage(`${nickname} left!`);
 });
 
 socket.on("new_message", addMessage);
