@@ -4,10 +4,21 @@ const room_elm = document.getElementById("room");
 const nickName_form = document.getElementById("nickName");
 const roomName_form = document.getElementById("roomName");
 const msg_form = document.getElementById("msg");
+const open_rooms = document.getElementById("openRooms");
 
 let roomName;
 
 const toggleElmArr = [nickName_form, roomName_form, msg_form];
+
+function addRoomList(rooms) {
+  const ul = open_rooms.querySelector("ul");
+  ul.innerHTML = "";
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerHTML = room;
+    ul.append(li);
+  });
+}
 
 function togglElmShow(elm) {
   toggleElmArr.forEach((target) => {
@@ -85,3 +96,5 @@ socket.on("bye", (nickname) => {
 });
 
 socket.on("new_message", addMessage);
+
+socket.on("room_change", addRoomList);
