@@ -10,6 +10,11 @@ let roomName;
 
 const toggleElmArr = [nickName_form, roomName_form, msg_form];
 
+function ChangeHowManyInTheRoom(count) {
+  const h3 = room_elm.querySelector("h3");
+  h3.innerText = `Room ${roomName} (${count})`;
+}
+
 function addRoomList(rooms) {
   const ul = open_rooms.querySelector("ul");
   ul.innerHTML = "";
@@ -18,6 +23,17 @@ function addRoomList(rooms) {
     li.innerHTML = room;
     ul.append(li);
   });
+}
+
+function cb_enteringRoom(count, nick) {
+  showMsgForm();
+  ChangeHowManyInTheRoom(count);
+  addMessage(`You just joined the room ${roomName}, ${nick} as nickname`);
+}
+
+function init() {
+  showNickNameForm();
+  socket.emit("howManyRooms", addRoomList);
 }
 
 function togglElmShow(elm) {
@@ -71,7 +87,7 @@ roomName_form.addEventListener("submit", (e) => {
   const h3 = room_elm.querySelector("h3");
   h3.innerHTML = `Room ${value}`;
   roomName = value;
-  socket.emit("enter_room", value, showMsgForm);
+  socket.emit("enter_room", value, cb_enteringRoom);
 });
 
 nickName_form.addEventListener("submit", (e) => {
@@ -85,16 +101,18 @@ nickName_form.addEventListener("submit", (e) => {
   }
 });
 
-showNickNameForm();
-
-socket.on("welcome", (nickname) => {
+socket.on("welcome", (nickname, userCount) => {
+  ChangeHowManyInTheRoom(userCount);
   addMessage(`${nickname} joined!`);
 });
 
-socket.on("bye", (nickname) => {
+socket.on("bye", (nickname, userCount) => {
+  ChangeHowManyInTheRoom(userCount);
   addMessage(`${nickname} left!`);
 });
 
 socket.on("new_message", addMessage);
 
 socket.on("room_change", addRoomList);
+
+init();

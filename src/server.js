@@ -17,6 +17,10 @@ const handleListen = () => console.log("Listening on http://localhost:3000");
 const server = http.createServer(app);
 const wsServer = SocketIO(server);
 
+function countRoom(roomName) {
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 function publicRooms() {
   const {
     sockets: {
@@ -45,14 +49,14 @@ wsServer.on("connection", (socket) => {
   socket.on("enter_room", (roomName, done) => {
     //console.log(socket.rooms);
     socket.join(roomName);
-    socket.to(roomName).emit("welcome", socket.nickname);
-    done();
+    socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
+    done(countRoom(roomName), socket["nickname"]);
     wsServer.sockets.emit("room_change", publicRooms());
   });
 
   socket.on("disconnecting", () => {
     socket.rooms.forEach((room) =>
-      socket.to(room).emit("bye", socket.nickname)
+      socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1)
     );
   });
 
@@ -72,6 +76,10 @@ wsServer.on("connection", (socket) => {
       socket["nickname"] = nickname;
     }
     done();
+  });
+
+  socket.on("howManyRooms", (done) => {
+    done(publicRooms());
   });
 });
 
