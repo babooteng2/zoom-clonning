@@ -1,8 +1,10 @@
 import http from "http";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
 import express from "express";
+import { instrument } from "@socket.io/admin-ui";
 
 //kill -9 $(lsof -t -i tcp:3000) - 사용포트 서버 죽이기
+// https://admin.socket.io/ 접속 localhost:3000/admin , 초기 path는 삭제 후 connect
 
 const app = express();
 
@@ -14,8 +16,17 @@ app.get("/*", (_, res) => res.redirect("/"));
 
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
-const server = http.createServer(app);
-const wsServer = SocketIO(server);
+const httpServer = http.createServer(app);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(wsServer, {
+  auth: false,
+});
 
 function countRoom(roomName) {
   return wsServer.sockets.adapter.rooms.get(roomName)?.size;
@@ -106,4 +117,4 @@ wss.on("connection", (socket) => {
   });
 }); */
 
-server.listen(3000, handleListen);
+httpServer.listen(3000, handleListen);
