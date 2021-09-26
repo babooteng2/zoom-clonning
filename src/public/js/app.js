@@ -92,18 +92,18 @@ camerasSelect.addEventListener("click", handleCameraChange);
 const welcome = document.getElementById("welcome");
 welcomeForm = welcome.querySelector("form");
 
-async function startMedia() {
+async function initCall() {
   welcome.hidden = true;
   call.hidden = false;
   await getMedia();
   makeConnection();
 }
 
-function handleWelcomeSubmit(e) {
+async function handleWelcomeSubmit(e) {
   e.preventDefault();
   const input = welcomeForm.querySelector("input");
-  console.log(input.value);
-  socket.emit("join_room", input.value, startMedia);
+  await initCall();
+  socket.emit("join_room", input.value);
   roomName = input.value;
   input.value = "";
 }
@@ -119,13 +119,21 @@ function makeConnection() {
 function init() {
   call.hidden = true;
   welcomeForm.addEventListener("submit", handleWelcomeSubmit);
+  // 브라우저가 모두 local, Remote description을 가지면 됨 - 그것을 위한 핑퐁
   socket.on("welcome", async () => {
     const offer = await myPeerConnection.createOffer();
     myPeerConnection.setLocalDescription(offer);
     console.log("sent the offer");
     socket.emit("offer", offer, roomName);
   });
-  socket.on("offer", (offer) => console.log(offer));
+  socket.on("offer", async (offer) => {
+    myPeerConnection.setRemoteDescription(offer);
+    const answer = await myPeerConnection.createAnswer();
+    socket.emit("answer", answer, roomName);
+  });
+  socket.on("answer", (answer) => {
+    myPeerConnection.setRemoteDescription(answer);
+  });
 }
 
 init();
