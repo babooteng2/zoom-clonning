@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "nodemon"
   },
+  "optionalDependencies": {
+    "fsevents": "*"
+  },
   "devDependencies": {
     "@babel/cli": "^7.15.4",
     "@babel/core": "^7.15.5",
@@ -19,6 +22,7 @@
   "dependencies": {
     "@socket.io/admin-ui": "^0.2.0",
     "express": "^4.17.1",
+    "global": "^4.4.0",
     "pug": "^3.0.2",
     "socket.io": "^4.2.0",
     "ws": "^8.2.1"
